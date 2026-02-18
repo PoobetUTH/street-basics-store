@@ -56,7 +56,9 @@ jobs:
 
     # 6) เชื่อม K8s Cluster (ใช้ kubeconfig เก็บใน Secrets)
     - name: Set Kubeconfig
-      run: echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
 
     # 7) อัปเดต Image version ใน Deployment
     - name: Deploy to Kubernetes
