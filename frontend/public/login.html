@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <title>STREET BASICS | Login</title>
+  </head>
+  <body class="login-page">
+    <div class="login-container">
+      <a href="index.html" class="login-brand text-main">STREET BASICS</a>
+
+      <div class="login-card" data-aos="fade-up">
+        <div class="login-tabs">
+          <button
+            class="login-tab active"
+            id="loginTab"
+            onclick="switchTab('login')"
+          >
+            เข้าสู่ระบบ
+          </button>
+          <button
+            class="login-tab"
+            id="registerTab"
+            onclick="switchTab('register')"
+          >
+            สมัครสมาชิก
+          </button>
+        </div>
+
+        <form
+          id="loginForm"
+          class="login-form active"
+          onsubmit="handleLogin(event)"
+        >
+          <div class="form-header">
+            <h2 class="text-main">ยินดีต้อนรับ</h2>
+            <p class="text-second">เข้าสู่ระบบเพื่อเริ่มช้อปปิ้ง</p>
+          </div>
+          <div class="form-group-custom">
+            <label class="text-second">อีเมล</label>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="your@email.com"
+              required
+            />
+          </div>
+          <div class="form-group-custom">
+            <label class="text-second">รหัสผ่าน</label>
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-submit text-main" id="loginBtn">
+            <span>เข้าสู่ระบบ</span>
+          </button>
+          <p class="form-footer text-second">
+            ยังไม่มีบัญชี?
+            <a href="#" onclick="switchTab('register')">สมัครเลย</a>
+          </p>
+        </form>
+
+        <form
+          id="registerForm"
+          class="login-form"
+          onsubmit="handleRegister(event)"
+        >
+          <div class="form-header">
+            <h2 class="text-main">สร้างบัญชีใหม่</h2>
+            <p class="text-second">สมัครสมาชิกเพื่อรับสิทธิพิเศษ</p>
+          </div>
+          <div class="form-group-custom">
+            <label class="text-second">ชื่อ</label>
+            <input
+              type="text"
+              id="registerName"
+              placeholder="ชื่อของคุณ"
+              required
+            />
+          </div>
+          <div class="form-group-custom">
+            <label class="text-second">อีเมล</label>
+            <input
+              type="email"
+              id="registerEmail"
+              placeholder="your@email.com"
+              required
+            />
+          </div>
+          <div class="form-group-custom">
+            <label class="text-second">รหัสผ่าน</label>
+            <input
+              type="password"
+              id="registerPassword"
+              placeholder="อย่างน้อย 6 ตัวอักษร"
+              required
+              minlength="6"
+            />
+          </div>
+          <button type="submit" class="btn-submit text-main" id="registerBtn">
+            <span>สมัครสมาชิก</span>
+          </button>
+          <p class="form-footer text-second">
+            มีบัญชีแล้ว?
+            <a href="#" onclick="switchTab('login')">เข้าสู่ระบบ</a>
+          </p>
+        </form>
+
+        <div id="toast" class="toast-message"></div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      AOS.init();
+    </script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

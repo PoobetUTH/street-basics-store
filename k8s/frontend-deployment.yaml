@@ -1,0 +1,30 @@
+# k8s/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 2                    # <-- เริ่มต้น 2 Pod
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-dockerhub/street-basics-frontend:v1
+        ports:
+        - containerPort: 3000
+        env:                     # <-- ค่า config จาก .env
+        - name: PORT
+          value: "3000"
+        resources:               # <-- กำหนด CPU/Memory (สำคัญมาก สำหรับ Auto-scaling)
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "300m"
+            memory: "128Mi"

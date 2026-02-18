@@ -1,0 +1,32 @@
+# k8s/backend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2                    # <-- เริ่มต้น 2 Pod
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: your-dockerhub/street-basics-backend:v1
+        ports:
+        - containerPort: 4000
+        env:                     # <-- ค่า config จาก .env
+        - name: PORT
+          value: "4000"
+        - name: JWT_SECRET
+          value: "your-secret"
+        resources:               # <-- กำหนด CPU/Memory (สำคัญมาก สำหรับ Auto-scaling)
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"

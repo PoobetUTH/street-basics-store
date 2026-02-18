@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Frontend Service
+  # ============================================
+  frontend:
+    build: ./frontend
+    container_name: street-basics-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE=http://backend:4000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # ============================================
+  # Backend API Service
+  # ============================================
+  backend:
+    build: ./backend
+    container_name: street-basics-backend
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      - JWT_SECRET=change-this-in-production
+      - JWT_EXPIRES_IN=7d
+      - DB_PATH=./data/store.db
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - backend-data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local

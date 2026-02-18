@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <title>STREET BASICS | Shop</title>
+  </head>
+  <body>
+    <header>
+      <nav class="main-nav">
+        <div class="brand text-main">
+          <a href="index.html">
+            <h1>STREET BASICS</h1>
+          </a>
+        </div>
+        <div class="links">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="#">Categories</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contacts</a></li>
+          </ul>
+        </div>
+        <div class="icon-for-user">
+          <a href="login.html" id="userIcon">
+            <img src="assets/icons/person.svg" alt="person" />
+          </a>
+          <a href="#" id="cartToggle" onclick="toggleCart(event)">
+            <img src="assets/icons/shop-bag.svg" alt="cart" />
+            <span class="cart-badge" id="cartBadge">0</span>
+          </a>
+        </div>
+        <div class="menu" onclick="openNav()">
+          <img src="assets/icons/menu.svg" alt="menu" />
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="user-bar" id="userBar" style="display: none">
+        <div class="container">
+          <p class="text-second">
+            สวัสดี, <strong id="userName"></strong> 👋
+            <a href="#" onclick="logout()" class="logout-link">ออกจากระบบ</a>
+          </p>
+        </div>
+      </div>
+
+      <section class="shop-banner">
+        <div class="container">
+          <div class="shop-banner-content" data-aos="fade-up">
+            <h1 class="text-main">SHOP</h1>
+            <p class="text-second">เลือกสินค้าที่ชอบแล้วสั่งซื้อได้เลย</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="shop-products">
+        <div class="container">
+          <div class="shop-filter" data-aos="fade-up">
+            <button class="filter-btn active" onclick="filterProducts('all')">
+              ทั้งหมด
+            </button>
+            <button class="filter-btn" onclick="filterProducts('shirts')">
+              Shirts
+            </button>
+            <button class="filter-btn" onclick="filterProducts('sweaters')">
+              Sweaters
+            </button>
+            <button class="filter-btn" onclick="filterProducts('jackets')">
+              Jackets
+            </button>
+            <button class="filter-btn" onclick="filterProducts('hoodies')">
+              Hoodies
+            </button>
+          </div>
+
+          <div class="products-grid row" id="productsGrid">
+            <div class="loading-spinner text-center py-5 col-12">
+              <div class="spinner"></div>
+              <p class="text-second mt-3">กำลังโหลดสินค้า...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div
+        class="cart-overlay"
+        id="cartOverlay"
+        onclick="toggleCart(event)"
+      ></div>
+      <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+          <h3 class="text-main">🛒 ตะกร้าสินค้า</h3>
+          <button class="cart-close" onclick="toggleCart(event)">
+            &times;
+          </button>
+        </div>
+        <div class="cart-items" id="cartItems">
+          <div class="cart-empty text-center text-second">
+            <p style="font-size: 48px">🛍️</p>
+            <p>ตะกร้าว่างเปล่า</p>
+          </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display: none">
+          <div class="cart-total">
+            <span class="text-main">รวมทั้งสิ้น</span>
+            <span class="cart-total-price text-main" id="cartTotal">$0.00</span>
+          </div>
+          <button
+            class="btn-checkout text-main"
+            id="checkoutBtn"
+            onclick="checkout()"
+          >
+            สั่งซื้อเลย
+          </button>
+        </div>
+      </aside>
+
+      <div class="modal-overlay" id="orderModal" style="display: none">
+        <div class="modal-content" data-aos="zoom-in">
+          <div class="modal-icon">✅</div>
+          <h2 class="text-main">สั่งซื้อสำเร็จ!</h2>
+          <p class="text-second">ขอบคุณที่สั่งซื้อสินค้ากับเรา</p>
+          <div class="order-details" id="orderDetails"></div>
+          <button class="btn-submit text-main" onclick="closeOrderModal()">
+            ช้อปต่อ
+          </button>
+        </div>
+      </div>
+
+      <div id="toast" class="toast-message"></div>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="footer-content row mb-4">
+          <div class="footer-brand col-12 col-sm-12 col-md-3 col-lg-3">
+            <div><h1 class="text-main">STREET BASICS</h1></div>
+          </div>
+          <div class="footer-items-box col-12 col-sm-12 col-md-9 col-lg-9">
+            <div class="footer-items row">
+              <div class="footer-item col-12 col-sm-12 col-md-4">
+                <div>
+                  <div class="footer-item-content">
+                    <h3 class="text-main">Store</h3>
+                    <p><a href="#">Men</a></p>
+                    <p><a href="#">Woman</a></p>
+                    <p><a href="#">Child</a></p>
+                    <p><a href="#">Teen</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="footer-item col-12 col-sm-12 col-md-4">
+                <div>
+                  <div class="footer-item-content">
+                    <h3 class="text-main">Business</h3>
+                    <p><a href="#">streetbasicssbs@gmail.com</a></p>
+                    <p><a href="#">021-1234-5678</a></p>
+                    <p><a href="#">Bekasi, Tambun Selatan</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="footer-item col-12 col-sm-12 col-md-4">
+                <div>
+                  <div class="footer-item-content">
+                    <h3 class="text-main">Social</h3>
+                    <a href="#" class="ig-icon">
+                      <img
+                        src="assets/images/instagram.png"
+                        alt="ig"
+                        class="img-fluid"
+                      />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="copyright-section border-top">
+          <div class="row">
+            <div class="col-12">
+              <div class="copyright-content text-center mt-4">
+                <p class="text-second">
+                  STREET BASICS Store Copyright &copy; 2020 All Rights Reserved
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      AOS.init();
+    </script>
+    <script src="js/shop.js"></script>
+  </body>
+</html>

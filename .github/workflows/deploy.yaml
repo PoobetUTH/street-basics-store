@@ -1,0 +1,73 @@
+# .github/workflows/deploy.yml
+name: Build & Deploy  # ชื่อ Pipeline
+
+# ✅ เมื่อไหร่จะรัน?
+on:
+  push:
+    branches: [main]   # รันทุกครั้งที่ Push ขึ้น branch main
+
+# ✅ ทำอะไรบ้าง?
+jobs:
+
+  # ============================
+  # Job 1: Build + Push Image
+  # ============================
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    # 1) ดึง code ลงมา
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2) Login เข้า Docker Hub
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # 3) Build + Push Backend Image
+    - name: Build & Push Backend
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/street-basics-backend:${{ github.sha }} ./backend
+        docker push ${{ secrets.DOCKER_USERNAME }}/street-basics-backend:${{ github.sha }}
+
+    # 4) Build + Push Frontend Image
+    - name: Build & Push Frontend
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/street-basics-frontend:${{ github.sha }} ./frontend
+        docker push ${{ secrets.DOCKER_USERNAME }}/street-basics-frontend:${{ github.sha }}
+
+  # ============================
+  # Job 2: Deploy ไป Kubernetes
+  # ============================
+  deploy:
+    needs: build          # ต้องรอ build เสร็จก่อน
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 5) ตั้งค่า kubectl
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+
+    # 6) เชื่อม K8s Cluster (ใช้ kubeconfig เก็บใน Secrets)
+    - name: Set Kubeconfig
+      run: echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+
+    # 7) อัปเดต Image version ใน Deployment
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/backend \
+          backend=${{ secrets.DOCKER_USERNAME }}/street-basics-backend:${{ github.sha }}
+        kubectl set image deployment/frontend \
+          frontend=${{ secrets.DOCKER_USERNAME }}/street-basics-frontend:${{ github.sha }}
+
+    # 8) รอให้ Deploy เสร็จ
+    - name: Verify Deployment
+      run: |
+        kubectl rollout status deployment/backend
+        kubectl rollout status deployment/frontend
