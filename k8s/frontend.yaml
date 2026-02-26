@@ -1,0 +1,54 @@
+# ============================================
+# Frontend Deployment
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: street-basics
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: poobetuth/streetbasics-frontend:v1.0.4
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: API_BASE
+              value: "http://localhost:4000"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+---
+# ============================================
+# Frontend Service (LoadBalancer for external access)
+# ============================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: street-basics
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer

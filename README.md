@@ -1,33 +1,98 @@
 # 🛍️ STREET BASICS Online Store
 
-ร้านค้าออนไลน์ที่ถูกออกแบบเป็น **Decoupled Microservices Architecture** แยก Frontend และ Backend อย่างชัดเจน
+ร้านค้าออนไลน์ที่ถูกออกแบบเป็น **Decoupled Microservices Architecture** แยก Frontend และ Backend อย่างชัดเจน พร้อม **CI/CD Pipeline**, **Kubernetes Deployment**, **Auto-Scaling** และ **Load Testing**
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
-├── frontend/              # Frontend Service (port 3000)
-│   ├── public/            # Static files (HTML, CSS, JS, assets)
-│   ├── server.js          # Express static server
-│   ├── Dockerfile         # Nginx-based production image
+├── frontend/                  # Frontend Service (port 8080)
+│   ├── public/                # Static files (HTML, CSS, JS, assets)
+│   ├── server.js              # Express static server
+│   ├── Dockerfile             # Node.js production image
 │   └── package.json
 │
-├── backend/               # Backend API Service (port 4000)
+├── backend/                   # Backend API Service (port 4000)
 │   ├── src/
-│   │   ├── config/        # Environment-based configuration
-│   │   ├── database/      # DB connection + seed data
-│   │   ├── middleware/     # JWT authentication
-│   │   ├── models/        # User, Product, Order models
-│   │   ├── routes/        # API route handlers
-│   │   ├── app.js         # Express app setup
-│   │   └── server.js      # Entry point
-│   ├── Dockerfile         # Node.js production image
+│   │   ├── config/            # Environment-based configuration
+│   │   ├── database/          # PostgreSQL connection + seed data
+│   │   ├── middleware/        # JWT authentication
+│   │   ├── models/            # User, Product, Order models
+│   │   ├── routes/            # API route handlers
+│   │   ├── app.js             # Express app setup
+│   │   └── server.js          # Entry point
+│   ├── Dockerfile             # Node.js production image
 │   └── package.json
 │
-├── docker-compose.yml     # Container orchestration
+├── k8s/                       # Kubernetes Manifests
+│   ├── namespace.yaml         # Namespace: street-basics
+│   ├── postgres.yaml          # PostgreSQL (Secret + PVC + Deployment + Service)
+│   ├── backend.yaml           # Backend (Deployment + Service)
+│   ├── frontend.yaml          # Frontend (Deployment + LoadBalancer)
+│   └── hpa.yaml               # HorizontalPodAutoscaler (auto-scaling)
+│
+├── .github/workflows/
+│   └── ci-cd.yml              # GitHub Actions CI/CD Pipeline
+│
+├── loadtest/                  # Load Testing
+│   ├── locustfile.py          # Locust load test script
+│   ├── k6-script.js           # k6 load test script
+│   └── README.md              # วิธีรัน load test
+│
+├── docker-compose.yml         # Local container orchestration
 └── README.md
 ```
 
-## Quick Start
+---
+
+## 🏗️ Architecture
+
+```
+                    ┌──────────────┐
+                    │   Internet   │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │ LoadBalancer  │
+                    │  (port 80)   │
+                    └──────┬───────┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+     ┌────────▼────────┐      ┌────────▼────────┐
+     │   Frontend (x2) │      │   Frontend (x2) │
+     │   Node.js :8080  │      │   Node.js :8080  │
+     └────────┬────────┘      └────────┬────────┘
+              │                         │
+              └────────────┬────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │ Backend Svc  │
+                    │  ClusterIP   │
+                    └──────┬───────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+  ┌──────▼──────┐   ┌─────▼──────┐   ┌─────▼──────┐
+  │ Backend (1) │   │ Backend (2)│   │ Backend (N)│
+  │ Express:4000│   │ Express:4000│  │ Express:4000│
+  └──────┬──────┘   └─────┬──────┘   └─────┬──────┘
+         │                │                 │
+         └────────────────┼─────────────────┘
+                          │
+                   ┌──────▼───────┐
+                   │  PostgreSQL  │
+                   │  :5432 + PVC │
+                   └──────────────┘
+
+  HPA: Backend  → min:2, max:10 (CPU 50%)
+  HPA: Frontend → min:2, max:5  (CPU 50%)
+```
+
+---
+
+## 🚀 Quick Start
 
 ### Development Mode
 
@@ -49,13 +114,116 @@ npm start
 
 เปิด browser ไปที่ http://localhost:3000
 
-### Docker Mode
+### Docker Compose Mode
 
 ```bash
 docker-compose up --build
 ```
 
-## API Endpoints
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:4000
+- PostgreSQL: localhost:5432
+
+---
+
+## ☸️ Kubernetes Deployment
+
+### Prerequisites
+
+- Docker + Docker Hub account
+- kubectl + Kubernetes cluster (Minikube / Docker Desktop / Cloud)
+
+### Step 1: Build & Push Docker Images
+
+```bash
+# Login Docker Hub
+docker login
+
+# Build & push backend
+docker build -t poobetuth/streetbasics-backend:latest ./backend
+docker push poobetuth/streetbasics-backend:latest
+
+# Build & push frontend
+docker build -t poobetuth/streetbasics-frontend:latest ./frontend
+docker push poobetuth/streetbasics-frontend:latest
+```
+
+### Step 2: Deploy to Kubernetes
+
+```bash
+# Apply all manifests (ตามลำดับ)
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/hpa.yaml
+```
+
+### Step 3: Verify
+
+```bash
+# ดู Pods
+kubectl get pods -n street-basics
+
+# ดู Services
+kubectl get svc -n street-basics
+
+# ดู HPA
+kubectl get hpa -n street-basics
+
+# ดู External IP ของ Frontend
+kubectl get svc frontend-service -n street-basics
+```
+
+---
+
+## 🔄 CI/CD Pipeline (GitHub Actions)
+
+Pipeline ทำงานอัตโนมัติเมื่อ push ไปยัง `main` branch:
+
+1. **Build** — สร้าง Docker image ของ frontend และ backend
+2. **Push** — Push image ไปยัง Docker Hub (`poobetuth/streetbasics-*`)
+3. **Deploy** — Deploy ไปยัง Kubernetes cluster
+
+### GitHub Secrets ที่ต้องตั้ง
+
+| Secret            | ค่า                                   |
+| ----------------- | ------------------------------------- |
+| `DOCKER_PASSWORD` | Docker Hub password หรือ access token |
+| `KUBE_CONFIG`     | base64 encoded kubeconfig ของ cluster |
+
+```bash
+# สร้าง KUBE_CONFIG secret
+cat ~/.kube/config | base64 | pbcopy
+# แล้วนำไปวางใน GitHub → Settings → Secrets → KUBE_CONFIG
+```
+
+---
+
+## 🔥 Load Testing
+
+ดูรายละเอียดที่ [loadtest/README.md](loadtest/README.md)
+
+```bash
+# Option A: Locust
+pip install locust
+locust -f loadtest/locustfile.py --host=http://localhost:4000
+
+# Option B: k6
+brew install k6
+k6 run loadtest/k6-script.js
+```
+
+### ดู Auto-Scaling ขณะ Load Test
+
+```bash
+kubectl get hpa -n street-basics -w    # ดู HPA scaling
+kubectl get pods -n street-basics -w   # ดู pods เพิ่ม/ลด
+```
+
+---
+
+## 📡 API Endpoints
 
 | Method | Endpoint             | Auth | Description          |
 | ------ | -------------------- | ---- | -------------------- |
@@ -68,23 +236,15 @@ docker-compose up --build
 | GET    | `/api/orders`        | ✅   | ดูประวัติการสั่งซื้อ |
 | GET    | `/api/health`        | ❌   | Health check         |
 
-## Environment Variables
+---
 
-### Backend (`backend/.env`)
-
-```env
-PORT=4000
-NODE_ENV=development
-DB_PATH=./data/store.db
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
-CORS_ORIGIN=http://localhost:3000
-```
-
-## Tech Stack
+## 🛠 Tech Stack
 
 - **Frontend**: HTML, CSS, JavaScript, Bootstrap
 - **Backend**: Node.js, Express
-- **Database**: SQLite (easily swappable to MySQL/PostgreSQL for production)
+- **Database**: PostgreSQL
 - **Auth**: JWT (JSON Web Tokens)
 - **Container**: Docker + Docker Compose
+- **Orchestration**: Kubernetes + HPA (auto-scaling)
+- **CI/CD**: GitHub Actions
+- **Load Testing**: Locust / k6

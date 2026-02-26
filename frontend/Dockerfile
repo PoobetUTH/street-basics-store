@@ -1,27 +1,22 @@
-FROM node:20-alpine AS build
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+# Copy package files
+COPY package.json package-lock.json ./
 
-COPY . .
+# Install production dependencies
+RUN npm ci --only=production
 
-# --- Production: Nginx ---
-FROM nginx:alpine
+# Copy source code
+COPY server.js ./
+COPY public/ ./public/
 
-COPY --from=build /app/public /usr/share/nginx/html
+# Expose port
+EXPOSE 8080
 
-# Custom nginx config for SPA
-RUN echo 'server { \
-    listen 3000; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-    try_files $uri $uri/ /index.html; \
-    } \
-    }' > /etc/nginx/conf.d/default.conf
+# Set environment defaults
+ENV PORT=8080
+ENV API_BASE=http://localhost:3000
 
-EXPOSE 3000
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "server.js"]

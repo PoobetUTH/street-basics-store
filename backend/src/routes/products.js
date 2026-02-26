@@ -4,14 +4,14 @@ const Product = require('../models/product');
 const router = express.Router();
 
 // GET /api/products
-router.get('/', (req, res) => {
-  const products = Product.findAll();
+router.get('/', async (req, res) => {
+  const products = await Product.findAll();
   res.json({ products });
 });
 
 // GET /api/products/:id
-router.get('/:id', (req, res) => {
-  const product = Product.findById(req.params.id);
+router.get('/:id', async (req, res) => {
+  const product = await Product.findById(req.params.id);
   if (!product) {
     return res.status(404).json({ error: 'ไม่พบสินค้า' });
   }

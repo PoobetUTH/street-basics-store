@@ -6,7 +6,7 @@ const config = require('../config');
 const router = express.Router();
 
 // POST /api/auth/register
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -17,13 +17,13 @@ router.post('/register', (req, res) => {
     return res.status(400).json({ error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' });
   }
 
-  const existing = User.findByEmail(email);
+  const existing = await User.findByEmail(email);
   if (existing) {
     return res.status(400).json({ error: 'อีเมลนี้ถูกใช้งานแล้ว' });
   }
 
   try {
-    const user = User.create({ name, email, password });
+    const user = await User.create({ name, email, password });
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
       config.jwt.secret,
@@ -41,14 +41,14 @@ router.post('/register', (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'กรุณากรอกอีเมลและรหัสผ่าน' });
   }
 
-  const user = User.findByEmail(email);
+  const user = await User.findByEmail(email);
   if (!user) {
     return res.status(401).json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
   }
@@ -73,8 +73,8 @@ router.post('/login', (req, res) => {
 // GET /api/auth/me
 const { authenticateToken } = require('../middleware/auth');
 
-router.get('/me', authenticateToken, (req, res) => {
-  const user = User.findById(req.user.id);
+router.get('/me', authenticateToken, async (req, res) => {
+  const user = await User.findById(req.user.id);
   if (!user) {
     return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
   }

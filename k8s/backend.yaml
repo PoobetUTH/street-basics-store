@@ -1,0 +1,79 @@
+# ============================================
+# Backend Deployment
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: street-basics
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: poobetuth/streetbasics-backend:v1.0.0
+          ports:
+            - containerPort: 4000
+          env:
+            - name: PORT
+              value: "4000"
+            - name: NODE_ENV
+              value: "production"
+            - name: DB_SSL
+              value: "false"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              value: "street-basics-k8s-secret-2024"
+            - name: JWT_EXPIRES_IN
+              value: "7d"
+            - name: CORS_ORIGIN
+              value: "*"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+---
+# ============================================
+# Backend Service
+# ============================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: street-basics
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 4000
+      targetPort: 4000
+  type: ClusterIP

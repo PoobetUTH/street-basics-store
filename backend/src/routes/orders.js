@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // POST /api/orders — Create new order
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { items } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -13,7 +13,7 @@ router.post('/', authenticateToken, (req, res) => {
   }
 
   try {
-    const result = Order.create(req.user.id, items);
+    const result = await Order.create(req.user.id, items);
 
     res.status(201).json({
       message: 'สั่งซื้อสำเร็จ!',
@@ -29,8 +29,8 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // GET /api/orders — Get user's orders
-router.get('/', authenticateToken, (req, res) => {
-  const orders = Order.findByUserId(req.user.id);
+router.get('/', authenticateToken, async (req, res) => {
+  const orders = await Order.findByUserId(req.user.id);
   res.json({ orders });
 });
 

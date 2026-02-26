@@ -2,20 +2,25 @@ version: '3.8'
 
 services:
   # ============================================
-  # Frontend Service
+  # PostgreSQL Database
   # ============================================
-  frontend:
-    build: ./frontend
-    container_name: street-basics-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - API_BASE=http://backend:4000
-    depends_on:
-      - backend
-    networks:
-      - app-network
+  postgres:
+    image: postgres:15-alpine
+    container_name: street-basics-db
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: street_basics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # ============================================
   # Backend API Service
@@ -23,25 +28,33 @@ services:
   backend:
     build: ./backend
     container_name: street-basics-backend
+    restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
-      - PORT=4000
-      - NODE_ENV=production
-      - JWT_SECRET=change-this-in-production
-      - JWT_EXPIRES_IN=7d
-      - DB_PATH=./data/store.db
-      - CORS_ORIGIN=http://localhost:3000
-    volumes:
-      - backend-data:/app/data
-    networks:
-      - app-network
-    restart: unless-stopped
+      PORT: 4000
+      NODE_ENV: production
+      DB_SSL: "false"
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/street_basics
+      JWT_SECRET: street-basics-prod-secret-2024
+      JWT_EXPIRES_IN: 7d
+      CORS_ORIGIN: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-networks:
-  app-network:
-    driver: bridge
+  # ============================================
+  # Frontend Service
+  # ============================================
+  frontend:
+    build: ./frontend
+    container_name: street-basics-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      PORT: 8080
+      API_BASE: http://backend:4000
 
 volumes:
-  backend-data:
-    driver: local
+  postgres_data:

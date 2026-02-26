@@ -90,7 +90,7 @@ function renderProducts(products) {
           <h4 class="text-main">${product.name}</h4>
           <p class="shop-product-desc text-second">${product.description || ''}</p>
           <div class="shop-product-footer">
-            <span class="shop-product-price text-main">$${product.price.toFixed(2)}</span>
+            <span class="shop-product-price text-main">$${Number(product.price).toFixed(2)}</span>
             <span class="shop-product-stock text-second">${product.stock > 0 ? `เหลือ ${product.stock} ชิ้น` : 'หมด'}</span>
           </div>
         </div>

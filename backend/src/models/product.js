@@ -1,16 +1,18 @@
-const db = require('../database/connection');
+const { query } = require('../database/connection');
 
 const Product = {
-  findAll() {
-    return db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
+  async findAll() {
+    const { rows } = await query('SELECT * FROM products ORDER BY created_at DESC');
+    return rows;
   },
 
-  findById(id) {
-    return db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+  async findById(id) {
+    const { rows } = await query('SELECT * FROM products WHERE id = $1', [id]);
+    return rows[0] || null;
   },
 
-  updateStock(id, quantityToDeduct) {
-    return db.prepare('UPDATE products SET stock = stock - ? WHERE id = ?').run(quantityToDeduct, id);
+  async updateStock(id, quantityToDeduct) {
+    return query('UPDATE products SET stock = stock - $1 WHERE id = $2', [quantityToDeduct, id]);
   },
 };
 

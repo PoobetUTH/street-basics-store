@@ -1,11 +1,12 @@
 require('dotenv').config();
 
 const config = {
-  port: parseInt(process.env.PORT, 10) || 4000,
+  port: parseInt(process.env.PORT, 10) || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
 
   db: {
-    path: process.env.DB_PATH || './data/store.db',
+    connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/street_basics',
+    ssl: process.env.DB_SSL === 'false' ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
   },
 
   jwt: {
