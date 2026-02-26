@@ -179,19 +179,26 @@ kubectl get svc frontend-service -n street-basics
 ## 🔄 CI/CD Pipeline (GitHub Actions)
 
 ```mermaid
-sequenceDiagram
-    participant Dev as 💻 Local Mac
-    participant Git as 🐙 GitHub
-    participant CI as ⚙️ GitHub Actions
-    participant Hub as 🐳 Docker Hub
-    participant K8s as ☁️ AWS (Minikube)
+architecture-beta
+    group user_env(cloud)[Local Environment]
+    service dev(server)[Local Mac] in user_env
 
-    Dev->>Git: 1. git push (Source Code)
-    Git->>CI: 2. Trigger Workflow
-    Note over CI: Build Docker Images<br/>(Frontend & Backend)
-    CI->>Hub: 3. docker push (poobetuth/*:latest)
-    CI->>K8s: 4. kubectl apply (Deploy to Cluster)
-    Note over K8s: Pulls latest images<br/>Updates Pods
+    group github_cloud(cloud)[GitHub Cloud]
+    service repo(database)[Source Code Repository] in github_cloud
+    service actions(server)[GitHub Actions CI/CD] in github_cloud
+
+    group docker_cloud(cloud)[Docker Hub]
+    service registry(database)[poobetuth/*:latest] in docker_cloud
+
+    group aws(cloud)[AWS Cloud]
+    group region(region)[Region us-east-1] in aws
+    service ec2(server)[EC2 t3.small / Minikube] in region
+
+    dev:R --> L:repo
+    repo:B --> T:actions
+    actions:R --> L:registry
+    registry:B --> T:ec2
+    actions:B --> L:ec2
 ```
 
 Pipeline ทำงานอัตโนมัติเมื่อมีการ `push` โค้ดไปยัง `main` branch:
