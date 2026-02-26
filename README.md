@@ -48,46 +48,43 @@
 
 ## 🏗️ Architecture
 
-```
-                    ┌──────────────┐
-                    │   Internet   │
-                    └──────┬───────┘
-                           │
-                    ┌──────▼───────┐
-                    │ LoadBalancer  │
-                    │  (port 80)   │
-                    └──────┬───────┘
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-     ┌────────▼────────┐      ┌────────▼────────┐
-     │   Frontend (x2) │      │   Frontend (x2) │
-     │   Node.js :8080  │      │   Node.js :8080  │
-     └────────┬────────┘      └────────┬────────┘
-              │                         │
-              └────────────┬────────────┘
-                           │
-                    ┌──────▼───────┐
-                    │ Backend Svc  │
-                    │  ClusterIP   │
-                    └──────┬───────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-  ┌──────▼──────┐   ┌─────▼──────┐   ┌─────▼──────┐
-  │ Backend (1) │   │ Backend (2)│   │ Backend (N)│
-  │ Express:4000│   │ Express:4000│  │ Express:4000│
-  └──────┬──────┘   └─────┬──────┘   └─────┬──────┘
-         │                │                 │
-         └────────────────┼─────────────────┘
-                          │
-                   ┌──────▼───────┐
-                   │  PostgreSQL  │
-                   │  :5432 + PVC │
-                   └──────────────┘
+```mermaid
+architecture-beta
+    group aws(cloud)[AWS Cloud]
 
-  HPA: Backend  → min:2, max:10 (CPU 50%)
-  HPA: Frontend → min:2, max:5  (CPU 50%)
+    group region(region)[Region us-east-1] in aws
+    group vpc(vpc)[VPC] in region
+
+    group igw_group(internet)[Internet] in vpc
+    service users(users)[Users] in igw_group
+
+    group alb_group(server)[Application Load Balancer] in vpc
+    service alb(server)[Public HTTP/HTTPS] in alb_group
+
+    group asg(server)[Auto Scaling Group - CPU 50%] in vpc
+
+    group az_a(zone)[Availability Zone - A] in asg
+    group subnet_a(subnet)[Private Subnet] in az_a
+    service frontend_a(server)[Frontend Node.js :8080] in subnet_a
+    service backend_a(server)[Backend API :4000] in subnet_a
+
+    group az_b(zone)[Availability Zone - B] in asg
+    group subnet_b(subnet)[Private Subnet] in az_b
+    service frontend_b(server)[Frontend Node.js :8080] in subnet_b
+    service backend_b(server)[Backend API :4000] in subnet_b
+
+    group db_group(database)[Database Subnet] in vpc
+    service rds(database)[Amazon RDS / PostgreSQL :5432] in db_group
+
+    users:R --> L:alb
+    alb:B --> T:frontend_a
+    alb:B --> T:frontend_b
+
+    frontend_a:B --> T:backend_a
+    frontend_b:B --> T:backend_b
+
+    backend_a:R --> L:rds
+    backend_b:L --> R:rds
 ```
 
 ---
