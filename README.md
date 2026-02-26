@@ -178,11 +178,23 @@ kubectl get svc frontend-service -n street-basics
 
 ## 🔄 CI/CD Pipeline (GitHub Actions)
 
-Pipeline ทำงานอัตโนมัติเมื่อ push ไปยัง `main` branch:
+```mermaid
+sequenceDiagram
+    participant Dev as 💻 Local Mac
+    participant Git as 🐙 GitHub
+    participant CI as ⚙️ GitHub Actions
+    participant Hub as 🐳 Docker Hub
+    participant K8s as ☁️ AWS (Minikube)
 
-1. **Build** — สร้าง Docker image ของ frontend และ backend
-2. **Push** — Push image ไปยัง Docker Hub (`poobetuth/streetbasics-*`)
-3. **Deploy** — Deploy ไปยัง Kubernetes cluster
+    Dev->>Git: 1. git push (Source Code)
+    Git->>CI: 2. Trigger Workflow
+    Note over CI: Build Docker Images<br/>(Frontend & Backend)
+    CI->>Hub: 3. docker push (poobetuth/*:latest)
+    CI->>K8s: 4. kubectl apply (Deploy to Cluster)
+    Note over K8s: Pulls latest images<br/>Updates Pods
+```
+
+Pipeline ทำงานอัตโนมัติเมื่อมีการ `push` โค้ดไปยัง `main` branch:
 
 ### GitHub Secrets ที่ต้องตั้ง
 
