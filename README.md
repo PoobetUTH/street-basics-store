@@ -48,46 +48,67 @@
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TD
-    classDef default fill:#1a1b26,stroke:#7aa2f7,stroke-width:2px,color:#a9b1d6
-    classDef highlight fill:#283457,stroke:#7aa2f7,stroke-width:2px,color:#c0caf5
-    classDef db fill:#2d3f76,stroke:#0db9d7,stroke-width:2px,color:#c0caf5
++----------------------------------------------------------------------------------+
+|                                   CLOUD (AWS)                                    |
+|                             Region: ap-southeast-1                               |
++----------------------------------------------------------------------------------+
 
-    Users([Users]) --> IGW(Internet Gateway)
-    IGW --> ALB([Application Load Balancer<br>port 80])
++---------------------------+
+|           User            |
+|     (Browser / Client)    |
++---------------------------+
+             |
+             | HTTP :80
+             v
++---------------------------+
+|     Internet Gateway      |
+|           (IGW)           |
++---------------------------+
+             |
+             v
++------------------------------------------------------------------+
+|                 Application Load Balancer (PUBLIC)               |
+|                 Listener: HTTP :80                               |
+|                 Health Check -> Target Group (Frontend)          |
++------------------------------------------------------------------+
+             |
+             | Forward to Target Group: Frontend :8080
+             v
 
-    subgraph ASG [Auto Scaling Group - CPU 50%]
-        direction TB
-
-        subgraph AZA [Availability Zone A]
-            direction TB
-            F1(Frontend Node.js :8080):::highlight
-            B1(Backend API :4000):::highlight
-        end
-
-        subgraph AZB [Availability Zone B]
-            direction TB
-            F2(Frontend Node.js :8080):::highlight
-            B2(Backend API :4000):::highlight
-        end
-    end
-
-    ALB --> F1
-    ALB --> F2
-
-    F1 --> B1
-    F2 --> B2
-
-    DB[(Amazon RDS / PostgreSQL<br>port 5432)]:::db
-
-    B1 --> DB
-    B2 --> DB
-
-    style ASG fill:none,stroke:#ff9e64,stroke-width:2px,stroke-dasharray: 5 5,color:#ff9e64
-    style AZA fill:none,stroke:#7dcfff,stroke-width:2px,stroke-dasharray: 5 5,color:#7dcfff
-    style AZB fill:none,stroke:#7dcfff,stroke-width:2px,stroke-dasharray: 5 5,color:#7dcfff
-```
++==================================================================================+
+|                           VPC: 10.0.0.0/16 (ap-southeast-1)                       |
+|----------------------------------------------------------------------------------|
+|   Public Subnets (Multi-AZ)                 |   Private Subnets (Multi-AZ)        |
+|   - ALB deployed across 2 AZs               |   - App runs here (ASG)             |
+|----------------------------------------------------------------------------------|
+|                 Auto Scaling Group (CPU Target 50%)                               |
+|----------------------------------------------------------------------------------|
+|     +----------------------------------+      +---------------------------------+|
+|     |     AZ-A  (ap-southeast-1b)      |      |     AZ-B  (ap-southeast-1c)     ||
+|     |     Private App Subnet           |      |     Private App Subnet          ||
+|     |                                  |      |                                 ||
+|     |  +----------------------------+  |      |  +----------------------------+ ||
+|     |  | Frontend Node.js           |  |      |  | Frontend Node.js           | ||
+|     |  | Port :8080                 |  |      |  | Port :8080                 | ||
+|     |  +-------------+--------------+  |      |  +-------------+--------------+ ||
+|     |                |                 |      |                |                ||
+|     |                | 2) API call     |      |                | 2) API call    ||
+|     |                |    HTTP :4000   |      |                |    HTTP :4000  ||
+|     |                v                 |      |                v                ||
+|     |  +----------------------------+  |      |  +----------------------------+ ||
+|     |  | Backend API                |  |      |  | Backend API                | ||
+|     |  | Port :4000                 |  |      |  | Port :4000                 | ||
+|     |  +-------------+--------------+  |      |  +-------------+--------------+ ||
+|     +----------------|-----------------+      +----------------|----------------+|
+|                      | 3) DB connect (TCP :5432)               |                 |
++======================|=========================================|=================+
+                       |                                         |
+                       v                                         v
+            +----------------------------------------------------------------+
+            |                 Amazon RDS (PostgreSQL)                        |
+            |                 Port :5432                                     |
+            |          Private DB Subnets (DB Subnet Group / Multi-AZ*)      |
+            +----------------------------------------------------------------+
 
 ---
 
