@@ -49,42 +49,44 @@
 ## 🏗️ Architecture
 
 ```mermaid
-architecture-beta
-    group aws(cloud)[AWS Cloud]
+graph TD
+    classDef default fill:#1a1b26,stroke:#7aa2f7,stroke-width:2px,color:#a9b1d6
+    classDef highlight fill:#283457,stroke:#7aa2f7,stroke-width:2px,color:#c0caf5
+    classDef db fill:#2d3f76,stroke:#0db9d7,stroke-width:2px,color:#c0caf5
 
-    group region(region)[Region us-east-1] in aws
-    group vpc(vpc)[VPC] in region
+    Users([Users]) --> IGW(Internet Gateway)
+    IGW --> ALB([Application Load Balancer<br>port 80])
 
-    group igw_group(internet)[Internet] in vpc
-    service users(users)[Users] in igw_group
+    subgraph ASG [Auto Scaling Group - CPU 50%]
+        direction TB
 
-    group alb_group(server)[Application Load Balancer] in vpc
-    service alb(server)[Public HTTP/HTTPS] in alb_group
+        subgraph AZA [Availability Zone A]
+            direction TB
+            F1(Frontend Node.js :8080):::highlight
+            B1(Backend API :4000):::highlight
+        end
 
-    group asg(server)[Auto Scaling Group - CPU 50%] in vpc
+        subgraph AZB [Availability Zone B]
+            direction TB
+            F2(Frontend Node.js :8080):::highlight
+            B2(Backend API :4000):::highlight
+        end
+    end
 
-    group az_a(zone)[Availability Zone - A] in asg
-    group subnet_a(subnet)[Private Subnet] in az_a
-    service frontend_a(server)[Frontend Node.js :8080] in subnet_a
-    service backend_a(server)[Backend API :4000] in subnet_a
+    ALB --> F1
+    ALB --> F2
 
-    group az_b(zone)[Availability Zone - B] in asg
-    group subnet_b(subnet)[Private Subnet] in az_b
-    service frontend_b(server)[Frontend Node.js :8080] in subnet_b
-    service backend_b(server)[Backend API :4000] in subnet_b
+    F1 --> B1
+    F2 --> B2
 
-    group db_group(database)[Database Subnet] in vpc
-    service rds(database)[Amazon RDS / PostgreSQL :5432] in db_group
+    DB[(Amazon RDS / PostgreSQL<br>port 5432)]:::db
 
-    users:R --> L:alb
-    alb:B --> T:frontend_a
-    alb:B --> T:frontend_b
+    B1 --> DB
+    B2 --> DB
 
-    frontend_a:B --> T:backend_a
-    frontend_b:B --> T:backend_b
-
-    backend_a:R --> L:rds
-    backend_b:L --> R:rds
+    style ASG fill:none,stroke:#ff9e64,stroke-width:2px,stroke-dasharray: 5 5,color:#ff9e64
+    style AZA fill:none,stroke:#7dcfff,stroke-width:2px,stroke-dasharray: 5 5,color:#7dcfff
+    style AZB fill:none,stroke:#7dcfff,stroke-width:2px,stroke-dasharray: 5 5,color:#7dcfff
 ```
 
 ---
