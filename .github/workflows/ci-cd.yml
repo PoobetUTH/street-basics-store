@@ -66,13 +66,17 @@ jobs:
           version: 'latest'
 
       - name: Configure kubeconfig
-        if: ${{ secrets.KUBE_CONFIG != '' }}
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        if: env.KUBE_CONFIG != ''
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          echo "$KUBE_CONFIG" | base64 -d > $HOME/.kube/config
 
       - name: Deploy to Kubernetes
-        if: ${{ secrets.KUBE_CONFIG != '' }}
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        if: env.KUBE_CONFIG != ''
         run: |
           # Apply all manifests
           kubectl apply -f k8s/namespace.yaml
@@ -95,7 +99,9 @@ jobs:
           kubectl rollout status deployment/frontend -n street-basics --timeout=120s
 
       - name: Verify Deployment
-        if: ${{ secrets.KUBE_CONFIG != '' }}
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        if: env.KUBE_CONFIG != ''
         run: |
           echo "=== Pods ==="
           kubectl get pods -n street-basics
